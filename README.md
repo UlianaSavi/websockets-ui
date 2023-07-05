@@ -7,17 +7,25 @@
 2. `npm install`
 
 ## Usage
+**Default**
+
+`npm run start`
+
+* App served @ `http://localhost:8181` without nodemon
+
 **Development**
 
 `npm run start:dev`
 
 * App served @ `http://localhost:8181` with nodemon
 
+
+
 **Production**
 
-`npm run start`
+`npm run start:prod`
 
-* App served @ `http://localhost:8181` without nodemon
+* App served @ `http://localhost:8181` do build app && run with nodemon
 
 ---
 

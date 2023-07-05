@@ -4,7 +4,6 @@ import * as http from 'http';
 import dotenv from 'dotenv';
 import { HOSTNAME } from '../constants';
 
-
 dotenv.config();
 const port = process.env.SERVER_PORT ? +process.env.SERVER_PORT : 8181;
 
