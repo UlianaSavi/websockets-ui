@@ -2,9 +2,9 @@ export const HOSTNAME = '127.0.0.1';
 
 export const BASE_COMMANDS = {
     REG: 'reg',
-    UPDATE_WINS: 'update_winners',
     CREATE_GAME: 'create_game',
     ADD_SHIPS: 'add_ships',
+    UPDATE_WINS: 'update_winners',
 };
 export const ROOM_COMMANDS = {
     CREATE_ROOM: 'create_room',

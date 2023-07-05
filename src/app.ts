@@ -4,6 +4,7 @@ import * as http from 'http';
 import dotenv from 'dotenv';
 import { HOSTNAME } from '../constants';
 import { WebSocketServer } from 'ws';
+import { Router } from './router';
 
 dotenv.config();
 const port = process.env.SERVER_PORT ? +process.env.SERVER_PORT : 3000;
@@ -38,18 +39,14 @@ wsServer.on('connection', function connection(ws, req) {
 
     ws.on('message', function message(chunk) {
         const req = JSON.parse(chunk.toString())
+        
         const command = req.type || 'unknown';
 
-        switch (command) {
-            case 'reg':
-                console.log('This is reg');
-                break;
-            case 'update_winners':
-                console.log('This is reg');
-                break;
-        
-            default:
-                break;
+        const res = Router.route(command);
+
+        if(res) {
+            ws.send(JSON.stringify(res))
         }
     });
+
 });
