@@ -1,13 +1,14 @@
 import { BASE_COMMANDS, GAME_COMMANDS, ROOM_COMMANDS } from '../constants';
+import { IResult } from './models/result.model';
 import { BaseService } from './services/base.service';
 import { GameService } from './services/game.servise';
 import { RoomService } from './services/room.servise';
 
 export class Router {
-    public static route = (command: string) => {
-        const baseServise = new BaseService(command);
-        const roomServise = new RoomService(command);
-        const gameServise = new GameService(command);
+    public static route = (command: string, reqData: string) => {
+        const baseServise = new BaseService(command, reqData);
+        const roomServise = new RoomService(command, reqData);
+        const gameServise = new GameService(command, reqData);
 
         let res: string | null = null;
 
@@ -24,27 +25,27 @@ export class Router {
             case BASE_COMMANDS.UPDATE_WINS:
                 res = baseServise.updateWins();
                 break;
-            case ROOM_COMMANDS.ADD_TO_ROOM:
-                res = roomServise.addToRoom();
-                break;
-            case ROOM_COMMANDS.CREATE_ROOM:
-                res = roomServise.createRoom();
-                break;
-            case ROOM_COMMANDS.UPDATE_ROOM:
-                res = roomServise.updateRoom();
-                break;
-            case GAME_COMMANDS.START_GAME:
-                res = gameServise.startGame();
-                break;
-            case GAME_COMMANDS.FINISH:
-                res = gameServise.finishGame();
-                break;
-            case GAME_COMMANDS.ATTACK:
-                res = gameServise.attack();
-                break;
-            case GAME_COMMANDS.RAND_ATTACK:
-                res = gameServise.randAttack();
-                break;
+            // case ROOM_COMMANDS.ADD_TO_ROOM:
+            //     res = roomServise.addToRoom();
+            //     break;
+            // case ROOM_COMMANDS.CREATE_ROOM:
+            //     res = roomServise.createRoom();
+            //     break;
+            // case ROOM_COMMANDS.UPDATE_ROOM:
+            //     res = roomServise.updateRoom();
+            //     break;
+            // case GAME_COMMANDS.START_GAME:
+            //     res = gameServise.startGame();
+            //     break;
+            // case GAME_COMMANDS.FINISH:
+            //     res = gameServise.finishGame();
+            //     break;
+            // case GAME_COMMANDS.ATTACK:
+            //     res = gameServise.attack();
+            //     break;
+            // case GAME_COMMANDS.RAND_ATTACK:
+            //     res = gameServise.randAttack();
+            //     break;
             default:
                 console.log('unknown command! :(');
                 break;

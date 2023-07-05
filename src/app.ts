@@ -39,12 +39,18 @@ wsServer.on('connection', function connection(ws, req) {
 
     ws.on('message', function message(chunk) {
         const req = JSON.parse(chunk.toString())
-        
+
+        const reqData = JSON.stringify(req.data) || '';
         const command = req.type || 'unknown';
 
-        const res = Router.route(command);
+        const data = Router.route(command, reqData);
+        const res = {
+            type: command,
+            data: data,
+            id: req.id,
+        };
 
-        if(res) {
+        if (res) {
             ws.send(JSON.stringify(res))
         }
     });
