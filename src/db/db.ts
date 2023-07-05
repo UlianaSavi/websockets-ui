@@ -4,26 +4,23 @@ class Database {
     private players: IPlayer[];
 
     constructor() {
-        this.players = [
-            {
+        this.players = [{
                 name: 'Tester',
-                index: 0,
-                error: false,
-                errorText: '',
+                password: '123456'
             },
             {
                 name: 'Tester 2',
-                index: 1,
-                error: false,
-                errorText: '',
+                password: '123456'
             }
         ];
     }
 
     public registration = (reqData: string) => {
-        return reqData;
-    };
+        const newPlayer: IPlayer = JSON.parse(reqData);
 
+        this.players.push(newPlayer);
+        return newPlayer;
+    };
 };
 
 export const db = new Database();
