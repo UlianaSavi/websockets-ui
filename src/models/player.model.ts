@@ -1,4 +1,5 @@
 export interface IPlayer {
     name: string,
-    password: string
+    password: string,
+    ws: WebSocket
 }

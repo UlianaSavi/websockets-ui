@@ -1,3 +1,5 @@
+import { db } from "../db/db";
+
 export class RoomService {
     res: string | null;
     command: string;
@@ -10,7 +12,7 @@ export class RoomService {
     }
 
     createRoom = () => {
-        console.log(this.command);
+        this.res = JSON.stringify(db.createRoom('asd'));
         return this.res;
     };
 

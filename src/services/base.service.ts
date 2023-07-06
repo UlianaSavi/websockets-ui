@@ -13,8 +13,7 @@ export class BaseService {
     }
 
     registration = () => {
-        const data = JSON.stringify(db.registration(this.reqData));
-        console.log(this.command);
+        const data = db.registration(this.reqData) ? JSON.stringify(db.registration(this.reqData)) : null;
         this.res = data
         return this.res;
     };

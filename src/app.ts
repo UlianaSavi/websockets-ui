@@ -32,7 +32,6 @@ const wsServer = new WebSocketServer({
 });
 
 wsServer.on('connection', function connection(ws, req) {
-
     ws.on('error', (err) => {
         console.error(err.message);
     });
@@ -40,19 +39,29 @@ wsServer.on('connection', function connection(ws, req) {
     ws.on('message', function message(chunk) {
         const req = JSON.parse(chunk.toString())
 
-        const reqData = JSON.stringify(req.data) || '';
+        let reqData = req.data || {};
         const command = req.type || 'unknown';
 
-        const data = Router.route(command, reqData);
+        if (command === 'reg') {
+            const addWs = {ws: ws}
+            reqData = JSON.stringify({...reqData, ...addWs});
+        }
+
+        const data = Router.route(command, JSON.stringify(reqData));
         const res = {
-            type: command,
+            type: command !== 'create_room' ? command : 'update_room',
             data: data,
             id: req.id,
         };
 
         if (res) {
+            console.log(`On command: "${ command }" result was sended successfully.`);
             ws.send(JSON.stringify(res))
         }
     });
 
 });
+
+wsServer.on('close', () => console.log('The connection has been closed successfully.'));
+
+wsServer.on('error', (err) => console.error(err.message));
