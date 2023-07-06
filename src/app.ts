@@ -33,7 +33,7 @@ const wsServer = new WebSocketServer({
 
 wsServer.on('connection', function connection(ws, req) {
     ws.on('error', (err) => {
-        console.error(err.message);
+        console.log(err.message);
     });
 
     ws.on('message', function message(chunk) {
@@ -64,4 +64,4 @@ wsServer.on('connection', function connection(ws, req) {
 
 wsServer.on('close', () => console.log('The connection has been closed successfully.'));
 
-wsServer.on('error', (err) => console.error(err.message));
+wsServer.on('error', (err) => console.log(err.message));

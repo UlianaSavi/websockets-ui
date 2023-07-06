@@ -9,7 +9,6 @@ export const BASE_COMMANDS = {
 export const ROOM_COMMANDS = {
     CREATE_ROOM: 'create_room',
     ADD_TO_ROOM: 'add_player_to_room',
-    UPDATE_ROOM: 'update_room',
 };
 
 export const GAME_COMMANDS = {
