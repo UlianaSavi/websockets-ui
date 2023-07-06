@@ -3,11 +3,16 @@ import * as path from 'path';
 import * as http from 'http';
 import dotenv from 'dotenv';
 import { HOSTNAME } from '../constants';
-import { WebSocketServer } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 import { Router } from './router';
+import { randomUUID } from 'crypto';
 
 dotenv.config();
 const port = process.env.SERVER_PORT ? +process.env.SERVER_PORT : 3000;
+
+type WebSocketClient = WebSocket & {
+    socketId: string;
+};
 
 const httpServer = http.createServer((req, res) => {
     const __dirname = path.resolve(path.dirname(''));
@@ -31,7 +36,9 @@ const wsServer = new WebSocketServer({
     server: httpServer
 });
 
-wsServer.on('connection', function connection(ws, req) {
+wsServer.on('connection', function connection(ws: WebSocketClient) {
+    ws.socketId = randomUUID();
+
     ws.on('error', (err) => {
         console.log(err.message);
     });
@@ -42,10 +49,8 @@ wsServer.on('connection', function connection(ws, req) {
         let reqData = req.data || {};
         const command = req.type || 'unknown';
 
-        if (command === 'reg') {
-            const addWs = {ws: ws}
-            reqData = JSON.stringify({...reqData, ...addWs});
-        }
+        const addWs = {socketId: ws.socketId}
+        reqData = JSON.stringify({...reqData, ...addWs}); // add socket id to request data for identify player
 
         const data = Router.route(command, JSON.stringify(reqData));
         const res = {

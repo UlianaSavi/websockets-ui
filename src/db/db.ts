@@ -1,4 +1,4 @@
-import { IRoom } from "../models/room.model";
+import { IRoom, IRoomUser } from "../models/room.model";
 import { IPlayer } from "../models/player.model";
 
 class Database {
@@ -7,11 +7,7 @@ class Database {
 
     constructor() {
         this.players = [];
-        this.rooms = [{
-                roomId: 0,
-                roomUsers: [],
-            },
-        ];
+        this.rooms = [];
     }
 
     public registration = (reqData: string) => {
@@ -21,15 +17,20 @@ class Database {
         return newPlayer;
     };
 
-    public createRoom = (playerPass: string) => {
+
+    public createRoom = (reqData: string) => {
         const room = this.checkRooms(); // check if there some rooms
-        if (room) {
-            this.updateRoom(room, playerPass); // add user to room
+        const playerId: string = JSON.parse(reqData).socketId || '';
+        const player = this.players.find((player) => player.socketId === playerId)
+
+        if (room && player) {
+            this.updateRoom(room, player); // add user to room
         }
+
         const newRoom: IRoom = {
             roomId: this.rooms.length + 1,
             roomUsers: [{
-                name: ``,
+                name:  player?.name || '',
                 index: this.rooms.length + 1,
             }],
         };
@@ -39,9 +40,14 @@ class Database {
         return newRoom;
     };
 
-    private updateRoom = (room: IRoom, playerPass: string) => {
-        const roomIdx = this.rooms.findIndex((roomInArr) => roomInArr.roomId === room.roomId); // for update room
-        // room.roomUsers.push() add player to room if after than room.player.len === 2 -> start game() else -> log()
+    private updateRoom = (roomHave: IRoom, player: IPlayer) => {
+        const roomForUpdateIdx = this.rooms.findIndex((roomInArr) => roomInArr.roomId === roomHave.roomId);
+        const newPlayerToRoom: IRoomUser = {
+            name: player?.name || '',
+            index: this.rooms.length + 1,
+        };
+        this.rooms[roomForUpdateIdx].roomUsers.push(newPlayerToRoom);
+        return this.rooms[roomForUpdateIdx];
     };
 
     private checkRooms = () => {

@@ -3,7 +3,7 @@ export interface IRoom {
         roomUsers: IRoomUser[] | [],
 }
 
-interface IRoomUser {
+export interface IRoomUser {
     name: string,
     index: number
 }
