@@ -1,6 +1,6 @@
 export interface IRoom {
     roomId: number,
-        roomUsers: IRoomUser[] | [],
+    roomUsers: IRoomUser[],
 }
 
 export interface IRoomUser {

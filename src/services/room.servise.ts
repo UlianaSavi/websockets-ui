@@ -12,7 +12,7 @@ export class RoomService {
     }
 
     createRoom = () => {
-        db.createRoom(this.reqData)
+        this.res = JSON.stringify(db.createRoom(this.reqData));
         return this.res;
     };
 

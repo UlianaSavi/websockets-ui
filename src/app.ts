@@ -45,16 +45,20 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
 
     ws.on('message', function message(chunk) {
         const req = JSON.parse(chunk.toString())
+        const addWs = {socketId: ws.socketId}
 
         let reqData = req.data || {};
-        const command = req.type || 'unknown';
-
-        const addWs = {socketId: ws.socketId}
+        let command = req.type || 'unknown';
         reqData = JSON.stringify({...reqData, ...addWs}); // add socket id to request data for identify player
 
         const data = Router.route(command, JSON.stringify(reqData));
+
+        if(command === 'create_room') {
+            command = 'update_room'
+        }
+
         const res = {
-            type: command !== 'create_room' ? command : 'update_room',
+            type: command,
             data: data,
             id: req.id,
         };

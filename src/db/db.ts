@@ -19,12 +19,12 @@ class Database {
 
 
     public createRoom = (reqData: string) => {
-        const room = this.checkRooms(); // check if there some rooms
+        const room = this.checkRooms(); // check if there some rooms for play
         const playerId: string = JSON.parse(reqData).socketId || '';
         const player = this.players.find((player) => player.socketId === playerId)
 
         if (room && player) {
-            this.updateRoom(room, player); // add user to room
+            this.updateRoom(room, player);
         }
 
         const newRoom: IRoom = {
@@ -37,17 +37,17 @@ class Database {
         
         this.rooms.push(newRoom);
         
-        return newRoom;
+        return this.rooms;
     };
 
-    private updateRoom = (roomHave: IRoom, player: IPlayer) => {
-        const roomForUpdateIdx = this.rooms.findIndex((roomInArr) => roomInArr.roomId === roomHave.roomId);
+    private updateRoom = (room: IRoom, player: IPlayer) => {
+        const roomForUpdateIdx = this.rooms.findIndex((roomInArr) => roomInArr.roomId === room.roomId);
         const newPlayerToRoom: IRoomUser = {
             name: player?.name || '',
             index: this.rooms.length + 1,
         };
         this.rooms[roomForUpdateIdx].roomUsers.push(newPlayerToRoom);
-        return this.rooms[roomForUpdateIdx];
+        return this.rooms;
     };
 
     private checkRooms = () => {
