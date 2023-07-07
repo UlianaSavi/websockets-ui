@@ -54,7 +54,7 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
         reqData.socketId = ws.socketId; // add socket id to request data for identify player
 
         const data = Router.route(command, JSON.stringify(reqData));
-        const rooms = null; // TODO: достать комнаты -> при каждом update rooms слать свежие комнаты каждому клиенту игры
+        const playersForStart = data && JSON.parse(data)?.idPlayer || null;
 
         if (command === 'create_room') {
             command = 'update_room'
@@ -77,11 +77,19 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
 
         if (res) {
             console.log(`On command: "${ command }" result was sended successfully.`);
-            ws.send(JSON.stringify(res))
+            ws.send(JSON.stringify(res));
         }
         if (message) {
             console.log(`On command: "${ command }" you get the message:\n${ message }`);
         }
+
+        wsServer.clients.forEach((wsClient) => {
+            if (playersForStart && playersForStart.find((playerId: string) => playerId === ws.socketId)) {
+                console.log(ws.socketId, playersForStart);
+
+                wsClient.send(JSON.stringify(res));
+            }
+        });
     });
 
 });

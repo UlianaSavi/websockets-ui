@@ -85,6 +85,8 @@ class Database {
             idGame: this.games.length + 1,
             idPlayer: [roomUsers.at(0)?.index || 'unknown', player.socketId], // create srr with two players in current game
         }
+        console.log(data);
+
         return data;
     };
 };
