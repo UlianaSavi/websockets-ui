@@ -16,18 +16,14 @@ export class Router {
                 res = baseServise.registration();
                 break;
             case ROOM_COMMANDS.CREATE_ROOM:
-                res = roomServise.createRoom();
+                res = roomServise.initRoom();
                 break;
-            // case GAME_COMMANDS.START_GAME:
-            //     res = gameServise.startGame();
-            //     break;
-            // case BASE_COMMANDS.ADD_SHIPS:
-            //     res = baseServise.addShips();
-            //     break;
+            case ROOM_COMMANDS.ADD_TO_ROOM:
+                res = roomServise.initRoom();
+                break;
             // case BASE_COMMANDS.UPDATE_WINS:
             //     res = baseServise.updateWins();
             //     break;
-            
             // case GAME_COMMANDS.FINISH:
             //     res = gameServise.finishGame();
             //     break;

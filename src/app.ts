@@ -6,6 +6,7 @@ import { HOSTNAME } from '../constants';
 import { WebSocket, WebSocketServer } from 'ws';
 import { Router } from './router';
 import { randomUUID } from 'crypto';
+import { RoomService } from './services/room.servise';
 
 dotenv.config();
 const port = process.env.SERVER_PORT ? +process.env.SERVER_PORT : 3000;
@@ -36,6 +37,7 @@ const wsServer = new WebSocketServer({
     server: httpServer
 });
 
+
 wsServer.on('connection', function connection(ws: WebSocketClient) {
     ws.socketId = randomUUID();
 
@@ -44,17 +46,23 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
     });
 
     ws.on('message', function message(chunk) {
-        const req = JSON.parse(chunk.toString())
-        const addWs = {socketId: ws.socketId}
-
-        let reqData = req.data || {};
+        const req = JSON.parse(chunk.toString());
         let command = req.type || 'unknown';
-        reqData = JSON.stringify({...reqData, ...addWs}); // add socket id to request data for identify player
+        let reqData = command !== 'create_room' ? JSON.parse(req.data) : {};
+
+        reqData.socketId = ws.socketId; // add socket id to request data for identify player
 
         const data = Router.route(command, JSON.stringify(reqData));
+        const rooms = null; // TODO: достать комнаты -> при каждом update rooms слать свежие комнаты каждому клиенту игры
 
-        if(command === 'create_room') {
+        if (command === 'create_room') {
             command = 'update_room'
+        }
+        if (data && command === 'update_room' && JSON.parse(data).idGame) {
+            command = 'create_game'
+        }
+        if (data && command === 'add_user_to_room' && JSON.parse(data).idGame) {
+            command = 'create_game'
         }
 
         const res = {
