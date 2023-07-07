@@ -28,14 +28,13 @@ class Database {
 
 
     public initRoom = (reqData: string) => {
-        const room = this.checkRooms(); // check if there some rooms for play
+        const room = this.checkRooms(); // check if there some rooms already with waiting player
         const playerId: string = JSON.parse(reqData).socketId || '';
-        const player = this.players.find((player) => player.socketId === playerId)
+        const player = this.players.find((player) => player.socketId === playerId);
 
         if (room && player) {
-            this.updateRoom(room, player);
-            // this.deleteFullRoom(room);
-            return this.startGame(room.roomUsers, player);
+            const res = this.updateRoom(room, player);
+            return res ? this.startGame(room.roomUsers, player) : null;
         }
 
         return player ? this.createRoom(player) : null;
@@ -62,6 +61,9 @@ class Database {
             name: player?.name || '',
             index: player.socketId,
         };
+        if (this.rooms[roomForUpdateIdx].roomUsers.find((player) => player.index === newPlayerToRoom.index)) { // return if same player want to adds to room
+            return null;
+        }
         this.rooms[roomForUpdateIdx].roomUsers.push(newPlayerToRoom);
         return this.rooms;
     };
