@@ -53,7 +53,7 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
 
         reqData.socketId = ws.socketId; // add socket id to request data for identify player
 
-        const data = Router.route(command, JSON.stringify(reqData));
+        const data = Router.route(command, JSON.stringify(reqData)) || '';
         const playersForStart = data && JSON.parse(data)?.idPlayer || null;
 
         if (command === ROOM_COMMANDS.CREATE_ROOM) {
@@ -69,28 +69,33 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
             message = 'Player already in this room!';
         }
 
-        const res = {
-            type: command,
-            data: data,
-            id: req.id,
-        };
-
-        if (res) {
-            console.log(`On command: "${ command }" result was sended successfully.`);
+        if (data !== 'null') {
+            const res = {
+                type: command,
+                data: data,
+                id: req.id,
+            };
+        
+            if (res) {
+                console.log(`On command: "${ command }" result was sended successfully.`);
+                ws.send(JSON.stringify(res));
+            }
+            if (message) {
+                console.log(`On command: "${ command }" you get the message:\n${ message }`);
+            }
+        
+            wsServer.clients.forEach((wsClient) => {
+                if (playersForStart && playersForStart.find((playerId: string) => playerId === ws.socketId)) {
+                    wsClient.send(JSON.stringify(res));
+                }
+                if (command === ROOM_COMMANDS.UPDATE_ROOM) {
+                    wsClient.send(JSON.stringify(res));
+                }
+            });
+        
             ws.send(JSON.stringify(res));
         }
-        if (message) {
-            console.log(`On command: "${ command }" you get the message:\n${ message }`);
-        }
-
-        wsServer.clients.forEach((wsClient) => {
-            if (playersForStart && playersForStart.find((playerId: string) => playerId === ws.socketId)) {
-                wsClient.send(JSON.stringify(res));
-            }
-            if (command === ROOM_COMMANDS.UPDATE_ROOM) {
-                wsClient.send(JSON.stringify(res));
-            }
-        });
+        
     });
 
 });

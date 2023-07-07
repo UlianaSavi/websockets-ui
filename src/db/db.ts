@@ -6,11 +6,13 @@ class Database {
     private players: IPlayer[];
     private rooms: IRoom[];
     private games: IGame[];
+    private roomToDelete: boolean;
 
     constructor() {
         this.players = [];
         this.rooms = [];
         this.games = [];
+        this.roomToDelete = false;
     }
 
     public registration = (reqData: string) => {
@@ -26,22 +28,35 @@ class Database {
         return newPlayer;
     };
 
-
-    public initRoom = (reqData: string) => {
-        const room = this.checkRooms(); // check if there some rooms already with waiting player
+    public addToRoom = (reqData: string) => {
         const playerId: string = JSON.parse(reqData).socketId || '';
-        const player = this.players.find((player) => player.socketId === playerId);
+        const player = this.players.find((player) => player.socketId === playerId); // currrent player
+        const reqRoomIdx: number = JSON.parse(reqData).indexRoom || '';
+        const currRoomIdx: number = this.rooms.findIndex((room) => room.roomId === reqRoomIdx);
 
-        if (room && player) {
-            const res = this.updateRoom(room, player);
-            return res ? this.startGame(room.roomUsers, player) : null;
+        const check = player && this.rooms[currRoomIdx].roomUsers.find((roomUser) => roomUser.index === player.socketId);
+
+        if (player && !check) {
+            this.rooms[currRoomIdx].roomUsers.push({
+                name: player.name,
+                index: player.socketId
+            });
+            
+            return this.startGame(this.rooms[currRoomIdx].roomUsers);
         }
 
-        return player ? this.createRoom(player) : null;
-        
+        // if (this.roomToDelete) {
+        //     this.deleteFullRoom(this.rooms[currRoomIdx]);
+        // }
+
+        // if (fullRoom) {
+        //     this.deleteFullRoom(this.rooms[currRoomIdx]);
+        // }
     };
 
-    private createRoom = (player: IPlayer) => {
+    public createRoom = (reqData: string) => {
+        const playerId: string = JSON.parse(reqData).socketId || '';
+        const player = this.players.find((player) => player.socketId === playerId);
         const newRoom: IRoom = {
             roomId: this.rooms.length + 1,
             roomUsers: [{
@@ -50,45 +65,42 @@ class Database {
             }],
         };
 
-        this.rooms.push(newRoom);
-
-        return this.rooms;
+        return this.updateRoom(newRoom);
     };
 
-    private updateRoom = (room: IRoom, player: IPlayer) => {
-        const roomForUpdateIdx = this.rooms.findIndex((roomInArr) => roomInArr.roomId === room.roomId);
-        const newPlayerToRoom: IRoomUser = {
-            name: player?.name || '',
-            index: player.socketId,
-        };
-        if (this.rooms[roomForUpdateIdx].roomUsers.find((player) => player.index === newPlayerToRoom.index)) { // return if same player want to adds to room
-            return null;
+    private updateRoom = (room?: IRoom) => {
+        if (room) {
+            this.rooms.push(room);
         }
-        this.rooms[roomForUpdateIdx].roomUsers.push(newPlayerToRoom);
         return this.rooms;
-    };
-
-    private checkRooms = () => {
-        const room = this.rooms.find((room) => room.roomUsers?.length < 2);
-        if(room) {
-            return room;
-        }
-        return null;
     };
 
     private deleteFullRoom = (room: IRoom) => {
         return this.rooms.filter((roomInArr) => roomInArr.roomId !== room.roomId);
     };
 
-    private startGame = (roomUsers: IRoomUser[], player: IPlayer) => {
+    private startGame = (roomUsers: IRoomUser[]) => {
         const data: IGame = {
             idGame: this.games.length + 1,
-            idPlayer: [roomUsers.at(0)?.index || 'unknown', player.socketId], // create srr with two players in current game
+            idPlayer: [roomUsers.at(0)?.index || 'unknown', roomUsers.at(1)?.index || 'unknown'], // create arr with two players in current game
         }
-        console.log(data);
+        this.roomToDelete = true;
 
         return data;
     };
+
+    // private asd = (room: IRoom, player: IPlayer) => {
+    //     const roomForUpdateIdx = this.rooms.findIndex((roomInArr) => roomInArr.roomId === room.roomId);
+    //     const newPlayerToRoom: IRoomUser = {
+    //         name: player?.name || '',
+    //         index: player.socketId,
+    //     };
+    //     if (this.rooms[roomForUpdateIdx].roomUsers.find((player) => player.index === newPlayerToRoom.index)) { // return if same player want to adds to room
+    //         return null;
+    //     }
+    //     this.rooms[roomForUpdateIdx].roomUsers.push(newPlayerToRoom);
+    //     return this.rooms;
+    // };
 };
 
 export const db = new Database();

@@ -16,10 +16,10 @@ export class Router {
                 res = baseServise.registration();
                 break;
             case ROOM_COMMANDS.CREATE_ROOM:
-                res = roomServise.initRoom();
+                res = roomServise.createRoom();
                 break;
             case ROOM_COMMANDS.ADD_TO_ROOM:
-                res = roomServise.initRoom();
+                res = roomServise.addToRoom();
                 break;
             // case BASE_COMMANDS.UPDATE_WINS:
             //     res = baseServise.updateWins();

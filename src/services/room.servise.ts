@@ -11,14 +11,15 @@ export class RoomService {
         this.reqData = reqData;
     }
 
-    initRoom = () => {
-        const result = db.initRoom(this.reqData);
+    createRoom = () => {
+        const result = db.createRoom(this.reqData);
         this.res = JSON.stringify(result);
         return this.res;
     };
 
-    updateRoom = () => {
-        console.log(this.command);
+    addToRoom = () => {
+        const result = db.addToRoom(this.reqData);
+        this.res = JSON.stringify(result); 
         return this.res;
     };
 }
