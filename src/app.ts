@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as http from 'http';
 import dotenv from 'dotenv';
-import { GAME_COMMANDS, HOSTNAME, ROOM_COMMANDS } from '../constants';
+import { BASE_COMMANDS, GAME_COMMANDS, HOSTNAME, ROOM_COMMANDS } from '../constants';
 import { WebSocket, WebSocketServer } from 'ws';
 import { Router } from './router';
 import { randomUUID } from 'crypto';
@@ -65,6 +65,9 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
         if (data && command === ROOM_COMMANDS.ADD_TO_ROOM && JSON.parse(data)?.idGame) {
             command = GAME_COMMANDS.CREATE_GAME;
         }
+        if (data && command === BASE_COMMANDS.ADD_SHIPS && JSON.parse(data)?.ships) {
+            command = GAME_COMMANDS.START_GAME;
+        }
         if (data && command === ROOM_COMMANDS.ADD_TO_ROOM && !JSON.parse(data)?.idGame) {
             message = 'Player already in this room!';
         }
@@ -93,6 +96,8 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
                 }
             });
         
+            console.log(res);
+            
             ws.send(JSON.stringify(res));
         }
         

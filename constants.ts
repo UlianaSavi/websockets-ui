@@ -19,3 +19,5 @@ export const GAME_COMMANDS = {
     ATTACK: 'attack',
     RAND_ATTACK: 'randomAttack',
 };
+
+export const MAX_PLAYERS = 2;

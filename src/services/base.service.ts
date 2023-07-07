@@ -14,17 +14,13 @@ export class BaseService {
 
     registration = () => {
         const data = db.registration(this.reqData) ? JSON.stringify(db.registration(this.reqData)) : null;
-        this.res = data
-        return this.res;
-    };
-
-    createNewGame = () => {
-        console.log(this.command);
+        this.res = data;
         return this.res;
     };
 
     addShips = () => {
-        console.log(this.command);
+        const data = db.addShips(this.reqData) ? JSON.stringify(db.addShips(this.reqData)) : null;
+        this.res = data;
         return this.res;
     };
 

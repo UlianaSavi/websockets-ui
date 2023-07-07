@@ -9,11 +9,6 @@ export class GameService {
         this.reqData = reqData;
     }
 
-    startGame = () => {
-        console.log(this.command);
-        return this.res;
-    };
-
     finishGame = () => {
         console.log(this.command);
         return this.res;

@@ -21,6 +21,9 @@ export class Router {
             case ROOM_COMMANDS.ADD_TO_ROOM:
                 res = roomServise.addToRoom();
                 break;
+            case BASE_COMMANDS.ADD_SHIPS:
+                res = baseServise.addShips();
+                break;
             // case BASE_COMMANDS.UPDATE_WINS:
             //     res = baseServise.updateWins();
             //     break;

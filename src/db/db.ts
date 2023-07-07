@@ -1,17 +1,21 @@
 import { IRoom, IRoomUser } from "../models/room.model";
 import { IPlayer } from "../models/player.model";
 import { IGame } from "../models/game.model";
+import { IShip } from "../models/ship.model";
+import { MAX_PLAYERS } from "../../constants";
 
 class Database {
     private players: IPlayer[];
     private rooms: IRoom[];
     private games: IGame[];
+    private shipsPos: IShip[];
     private roomToDelete: boolean;
 
     constructor() {
         this.players = [];
         this.rooms = [];
         this.games = [];
+        this.shipsPos = [];
         this.roomToDelete = false;
     }
 
@@ -42,7 +46,7 @@ class Database {
                 index: player.socketId
             });
             
-            return this.startGame(this.rooms[currRoomIdx].roomUsers);
+            return this.createGame(this.rooms[currRoomIdx].roomUsers);
         }
 
         // if (this.roomToDelete) {
@@ -79,7 +83,7 @@ class Database {
         return this.rooms.filter((roomInArr) => roomInArr.roomId !== room.roomId);
     };
 
-    private startGame = (roomUsers: IRoomUser[]) => {
+    private createGame = (roomUsers: IRoomUser[]) => {
         const data: IGame = {
             idGame: this.games.length + 1,
             idPlayer: [roomUsers.at(0)?.index || 'unknown', roomUsers.at(1)?.index || 'unknown'], // create arr with two players in current game
@@ -88,6 +92,32 @@ class Database {
 
         return data;
     };
+
+    public addShips = (reqData: string) => {
+        const data: IShip = JSON.parse(reqData);
+        
+        const ship: IShip = {
+            gameId: data.gameId,
+            ships: data.ships,
+            indexPlayer: data.indexPlayer
+        }
+
+        this.shipsPos.push(ship);
+        if (this.shipsPos.length === MAX_PLAYERS) {
+            this.startGame(data.indexPlayer);
+        }
+
+        return ship;
+    };
+
+    private startGame = (indexPlayer: number[]) => {
+        const data = {
+            ships: this.shipsPos,
+            currentPlayerIndex: indexPlayer,
+        };
+
+        return data;
+    }
 
     // private asd = (room: IRoom, player: IPlayer) => {
     //     const roomForUpdateIdx = this.rooms.findIndex((roomInArr) => roomInArr.roomId === room.roomId);
