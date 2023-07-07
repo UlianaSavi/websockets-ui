@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as http from 'http';
 import dotenv from 'dotenv';
-import { BASE_COMMANDS, GAME_COMMANDS, HOSTNAME, ROOM_COMMANDS } from '../constants';
+import { BASE_COMMANDS, GAME_COMMANDS, HOSTNAME, MAX_SWIPS_LEN, ROOM_COMMANDS } from '../constants';
 import { WebSocket, WebSocketServer } from 'ws';
 import { Router } from './router';
 import { randomUUID } from 'crypto';
@@ -49,7 +49,7 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
         const req = JSON.parse(chunk.toString());
         let command = req.type || 'unknown';
         let message: string | null = null;
-        let reqData = command !== ROOM_COMMANDS.CREATE_ROOM ? JSON.parse(req.data) : {};
+        let reqData = command !== ROOM_COMMANDS.CREATE_ROOM ? JSON.parse(req.data || '') : {};
 
         reqData.socketId = ws.socketId; // add socket id to request data for identify player
 
@@ -65,10 +65,10 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
         if (data && command === ROOM_COMMANDS.ADD_TO_ROOM && JSON.parse(data)?.idGame) {
             command = GAME_COMMANDS.CREATE_GAME;
         }
-        if (data && command === BASE_COMMANDS.ADD_SHIPS && JSON.parse(data)?.ships) {
+        if (data && command === BASE_COMMANDS.ADD_SHIPS && JSON.parse(data)?.ships?.length === MAX_SWIPS_LEN) {
             command = GAME_COMMANDS.START_GAME;
         }
-        if (data && command === ROOM_COMMANDS.ADD_TO_ROOM && !JSON.parse(data)?.idGame) {
+        if (!data && command === ROOM_COMMANDS.ADD_TO_ROOM) {
             message = 'Player already in this room!';
         }
 
@@ -79,9 +79,10 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
                 id: req.id,
             };
         
-            if (res) {
+            if (res && !message) {
                 console.log(`On command: "${ command }" result was sended successfully.`);
                 ws.send(JSON.stringify(res));
+                console.log(res);
             }
             if (message) {
                 console.log(`On command: "${ command }" you get the message:\n${ message }`);
@@ -94,13 +95,14 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
                 if (command === ROOM_COMMANDS.UPDATE_ROOM) {
                     wsClient.send(JSON.stringify(res));
                 }
+                if (command === GAME_COMMANDS.START_GAME) {
+                    wsClient.send(JSON.stringify(res));
+                }
             });
         
-            console.log(res);
-            
             ws.send(JSON.stringify(res));
         }
-        
+
     });
 
 });
