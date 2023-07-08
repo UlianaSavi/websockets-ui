@@ -1,19 +1,18 @@
 export interface IShip {
     gameId: number,
-    ships:
-        [
-            {
-                position: {
-                    x: number,
-                    y: number,
-                },
-                direction: boolean,
-                length: number,
-                type: shipsType,
-            }
-        ],
-    indexPlayer: number[]
+    ships: IShipPos[],
+    indexPlayer: string
 };
+
+export interface IShipPos {
+        position: {
+            x: number,
+            y: number,
+        },
+        direction: boolean,
+        length: number,
+        type: shipsType,
+}
 
 export enum shipsType {
     small = "small",

@@ -17,7 +17,8 @@ export class GameService {
     };
 
     attack = () => {
-        const res = db.attack(this.reqData);
+        const data = JSON.stringify(db.attack(this.reqData));
+        this.res = data;
         return this.res;
     };
 

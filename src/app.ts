@@ -38,7 +38,8 @@ const wsServer = new WebSocketServer({
 
 
 wsServer.on('connection', function connection(ws: WebSocketClient) {
-    ws.socketId = randomUUID();
+    const uuid = randomUUID();
+    ws.socketId = uuid.replaceAll(/[A-Za-z--]/g, ''); // delete characters and - from id (front need only nums)
 
     ws.on('error', (err) => {
         console.log(err.message);
@@ -50,8 +51,6 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
         let turn: string | null = null;
         let message: string | null = null;
         let reqData = command !== ROOM_COMMANDS.CREATE_ROOM ? JSON.parse(req.data || '') : {};
-        console.log(reqData);
-        
 
         reqData.socketId = ws.socketId; // add socket id to request data for identify player
 
@@ -71,7 +70,10 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
         
         if (data && command === BASE_COMMANDS.ADD_SHIPS && parsedData?.start === MAX_PLAYERS) {
             command = GAME_COMMANDS.START_GAME;
-            turn = parsedData?.indexPlayer?.at(0);
+            
+            console.log('in start game command: ', parsedData);
+            
+            turn = parsedData?.currentPlayerIndex?.at(1);
         }
         if (!data && command === ROOM_COMMANDS.ADD_TO_ROOM) {
             message = 'Player already in this room!';
@@ -79,7 +81,7 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
 
         if (data !== 'null') {
             
-            let res: {} = {
+            const res = {
                 type: command,
                 data: data,
                 id: req.id
@@ -92,7 +94,10 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
             if (message) {
                 console.log(`On command: "${ command }" you get the message:\n${ message }`);
             }
-        
+
+            ws.send(JSON.stringify(res));
+            console.log(res);
+
             wsServer.clients.forEach((wsClient) => {
                 if (playersForStart && playersForStart.find((playerId: string) => playerId === ws.socketId)) {
                     wsClient.send(JSON.stringify(res));
@@ -103,27 +108,25 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
                 if (command === GAME_COMMANDS.START_GAME) {
                     wsClient.send(JSON.stringify(res));
                     
-                    // где-то тут ошибка с "[object Object]" is not valid JSON at JSON.parse
-                    // TODO: пофиксить это, а затем добавить:
                     // 1) отправлять turn после каждого attack() и на start_game()
                     // 2) вынести как-то отдельно формирование turn res (а не как щас - внутри wsServer.clients.forEach - тут должен быть уже сформированный выше res)
                     // 3) реализовать attack()
                     // 4) реализовать randomAttack()
                     if (turn) {
-                        res = {
-                            type: 'turn',
-                            data:
-                                {
-                                    currentPlayer: turn,
-                                },
+                        const turnData = {
+                            currentPlayer: turn,
+                        };
+
+                        const turnRes = {
+                            type: "turn",
+                            data: JSON.stringify(turnData),
                             id: 0
                         };
-                        wsClient.send(JSON.stringify(res));
+
+                        wsClient.send(JSON.stringify(turnRes));
                     }
                 }
             });
-        
-            ws.send(JSON.stringify(res));
         }
 
     });

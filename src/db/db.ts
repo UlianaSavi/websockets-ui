@@ -1,8 +1,7 @@
 import { IRoom, IRoomUser } from "../models/room.model";
 import { IPlayer } from "../models/player.model";
 import { IGame } from "../models/game.model";
-import { IShip } from "../models/ship.model";
-import { MAX_PLAYERS } from "../../constants";
+import { IShip, IShipPos } from "../models/ship.model";
 import { IAttack } from "../models/attack.model";
 
 class Database {
@@ -118,7 +117,7 @@ class Database {
         return this.startGame(data.indexPlayer);
     };
 
-    private startGame = (indexPlayer: number[]) => {
+    private startGame = (indexPlayer: string) => {
         const data = {
             ships: this.playersShips,
             currentPlayerIndex: indexPlayer,
@@ -128,12 +127,10 @@ class Database {
         return data;
     }
 
-    private sendTurn = (player: IPlayer) => {
-        return { currentPlayer:  player.socketId }
-    };
-
     public attack = (reqData: string) => {
-        const data: IAttack = JSON.parse(reqData);
+        const data = JSON.parse(reqData);
+        const currPlayer = data.socketId || '';
+        const status = this.checkStatus(data.x, data.y, currPlayer);
         const res = {
             position:
             {
@@ -141,9 +138,41 @@ class Database {
                 y: data.y,
             },
             currentPlayer: data.indexPlayer,
-            status: '', // here need "miss" | "killed" | "shot" (как понять попали ли мы по кораблю?)
+            status: status,
         }
         return res;
+    }
+
+    private checkStatus = (x: number, y: number, currPlayerIdx: string) => {
+        const protectorIdx = this.playersShips.findIndex((ship: IShip) => ship.indexPlayer !== currPlayerIdx);
+
+        const protectorShips = this.playersShips[protectorIdx]?.ships;
+        let status = 'miss';
+        
+        protectorShips.forEach((ship) => {
+            console.log('ship position: ', ship.position);
+            
+            console.log('x&y', x, y);
+            console.log('x++++y', ship.position.x, ship.position.y);
+            console.log('ship.position.x === x', ship.position.x === x);
+            console.log('ship.position.x === x', ship.position.y === y);
+
+            // TODO: допилить логику miss/shot (сейчас работает отлично только kill) - в помощь логи выше :)
+            // Добавить поле для различия для кораблей, которые killed и не killed 
+            // и радиусу клеток возле killed (если есть это поле - выстрел не проходит)
+            if (ship.position.x === x && ship.position.y === y) {
+                ship.position.x += NaN;
+                ship.position.y += NaN;
+                status = 'shot';
+                ship.length = ship.length - 1;
+                return status;
+            }
+            if (!ship.length) {
+                status = 'killed';
+                return status;
+            }
+        });
+        return status;
     }
 
     // private asd = (room: IRoom, player: IPlayer) => {
