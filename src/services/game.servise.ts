@@ -1,3 +1,5 @@
+import { db } from "../db/db";
+
 export class GameService {
     res: string | null;
     command: string;
@@ -15,7 +17,7 @@ export class GameService {
     };
 
     attack = () => {
-        console.log(this.command);
+        const res = db.attack(this.reqData);
         return this.res;
     };
 

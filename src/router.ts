@@ -24,15 +24,16 @@ export class Router {
             case BASE_COMMANDS.ADD_SHIPS:
                 res = baseServise.addShips();
                 break;
+            case GAME_COMMANDS.ATTACK:
+                res = gameServise.attack();
+                break;
             // case BASE_COMMANDS.UPDATE_WINS:
             //     res = baseServise.updateWins();
             //     break;
             // case GAME_COMMANDS.FINISH:
             //     res = gameServise.finishGame();
             //     break;
-            // case GAME_COMMANDS.ATTACK:
-            //     res = gameServise.attack();
-            //     break;
+            
             // case GAME_COMMANDS.RAND_ATTACK:
             //     res = gameServise.randAttack();
             //     break;

@@ -22,4 +22,4 @@ export const GAME_COMMANDS = {
 
 export const MAX_PLAYERS = 2;
 
-export const MAX_SWIPS_LEN = 10;
+export const MAX_SWIPS_LEN = 20;

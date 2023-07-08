@@ -3,20 +3,23 @@ import { IPlayer } from "../models/player.model";
 import { IGame } from "../models/game.model";
 import { IShip } from "../models/ship.model";
 import { MAX_PLAYERS } from "../../constants";
+import { IAttack } from "../models/attack.model";
 
 class Database {
     private players: IPlayer[];
     private rooms: IRoom[];
     private games: IGame[];
-    private shipsPos: IShip[];
+    private playersShips: IShip[];
     private roomToDelete: boolean;
+    private start: string[];
 
     constructor() {
         this.players = [];
         this.rooms = [];
         this.games = [];
-        this.shipsPos = [];
+        this.playersShips = [];
         this.roomToDelete = false;
+        this.start = [];
     }
 
     public registration = (reqData: string) => {
@@ -102,21 +105,45 @@ class Database {
             indexPlayer: data.indexPlayer
         }
 
-        this.shipsPos.push(ship);
-        if (this.shipsPos.length === MAX_PLAYERS) {
-            this.startGame(data.indexPlayer);
+        this.playersShips.push(ship);
+
+        if (this.start.length < 2) {
+            this.start.push(`ready: ${ data.indexPlayer }`);
+            return ship;
+        }
+        if (this.start.length > 2) {
+            this.start.splice(0, this.start.length);
         }
 
-        return ship;
+        return this.startGame(data.indexPlayer);
     };
 
     private startGame = (indexPlayer: number[]) => {
         const data = {
-            ships: this.shipsPos,
+            ships: this.playersShips,
             currentPlayerIndex: indexPlayer,
+            start: this.start.length
         };
 
         return data;
+    }
+
+    private sendTurn = (player: IPlayer) => {
+        return { currentPlayer:  player.socketId }
+    };
+
+    public attack = (reqData: string) => {
+        const data: IAttack = JSON.parse(reqData);
+        const res = {
+            position:
+            {
+                x: data.x,
+                y: data.y,
+            },
+            currentPlayer: data.indexPlayer,
+            status: '', // here need "miss" | "killed" | "shot" (как понять попали ли мы по кораблю?)
+        }
+        return res;
     }
 
     // private asd = (room: IRoom, player: IPlayer) => {
