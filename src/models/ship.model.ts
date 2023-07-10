@@ -5,13 +5,27 @@ export interface IShip {
 };
 
 export interface IShipPos {
-        position: {
-            x: number,
-            y: number,
-        },
-        direction: boolean,
-        length: number,
-        type: shipsType,
+    position: {
+        x: number,
+        y: number,
+    },
+    direction: boolean,
+    length: number,
+    type: shipsType
+}
+
+export interface IShipAfterShot {
+    position: {
+        x: number,
+        y: number,
+    },
+    currentPlayer: string,
+    status: string
+}
+
+export type IAfterAttack = {
+    shipAfterShot: IShipAfterShot,
+    newShipPos: IShipPos
 }
 
 export enum shipsType {

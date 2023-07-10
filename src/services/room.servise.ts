@@ -18,7 +18,7 @@ export class RoomService {
     };
 
     addToRoom = () => {
-        const result = db.addToRoom(this.reqData);
+        const result = db.addToRoom(this.reqData) || null;
         this.res = JSON.stringify(result); 
         return this.res;
     };

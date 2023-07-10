@@ -1,4 +1,5 @@
 export interface IGame {
     idGame: number,
-    idPlayer: string[]
+    idPlayer: string,
+    idSecondPlayer: string
 }
