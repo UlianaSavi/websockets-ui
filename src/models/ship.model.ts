@@ -1,7 +1,7 @@
 export interface IShip {
     gameId: number,
     ships: IShipPos[],
-    indexPlayer: string
+    indexPlayer: number
 };
 
 export interface IShipPos {
@@ -13,13 +13,12 @@ export interface IShipPos {
     length: number,
     type: shipsType
 }
-
 export interface IShipAfterShot {
     position: {
         x: number,
         y: number,
     },
-    currentPlayer: string,
+    currentPlayer: number,
     status: string
 }
 

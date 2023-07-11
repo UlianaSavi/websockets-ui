@@ -11,7 +11,7 @@ dotenv.config();
 const port = process.env.SERVER_PORT ? +process.env.SERVER_PORT : 3000;
 
 type WebSocketClient = WebSocket & {
-    socketId: string;
+    socketId: number;
 };
 
 const httpServer = http.createServer((req, res) => {
@@ -36,10 +36,12 @@ const wsServer = new WebSocketServer({
     server: httpServer
 });
 
-
+let num: number[] = [];
 wsServer.on('connection', function connection(ws: WebSocketClient) {
-    const uuid = randomUUID();
-    ws.socketId = uuid.replaceAll(/[A-Za-z--]/g, ''); // delete characters and - from id (front need only nums)
+    // const uuid = randomUUID();
+    // ws.socketId = +uuid.replaceAll(/[A-Za-z--]/g, ''); // delete characters and - from id (front need only nums)
+    ws.socketId = num.length
+    num.push(ws.socketId);
 
     ws.on('error', (err) => {
         console.log(err.message);
@@ -48,14 +50,15 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
     ws.on('message', function message(chunk) {
         const req = JSON.parse(chunk.toString());
         
-        let command = req.type || 'unknown';
+        let command: string = req.type || 'unknown';
         let turn: string | null = null;
         let message: string | null = null;
         let reqData = command !== ROOM_COMMANDS.CREATE_ROOM ? JSON.parse(req.data || '') : {};
 
         reqData.socketId = ws.socketId; // add socket id to request data for identify player
 
-        const data = Router.route(command, JSON.stringify(reqData)) || '';
+        const data = Router.route(command, JSON.stringify(reqData)) || 'null';
+        
         const parsedData = data !== 'null' ? JSON.parse(data) : null;
 
         if (!parsedData && command === ROOM_COMMANDS.ADD_TO_ROOM) {
@@ -68,28 +71,33 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
         if (parsedData) {
             const playersForStart = [parsedData?.idPlayer, parsedData?.idSecondPlayer];
 
-            if (command === ROOM_COMMANDS.CREATE_ROOM) {
-                command = ROOM_COMMANDS.UPDATE_ROOM;
-            }
-            if (data && command === ROOM_COMMANDS.UPDATE_ROOM && parsedData.idGame) {
-                command = GAME_COMMANDS.CREATE_GAME;
-            }
-            if (data && command === ROOM_COMMANDS.ADD_TO_ROOM && parsedData.idGame) {
-                command = GAME_COMMANDS.CREATE_GAME;
-            }
-            
-            if (data && command === BASE_COMMANDS.ADD_SHIPS && parsedData?.start === MAX_PLAYERS) {
-                command = GAME_COMMANDS.START_GAME;
-                
-                turn = parsedData?.indexPlayer;
-            }
-    
-            const res = {
+            let res = {
                 type: command,
                 data: data,
                 id: req.id
             };
-        
+
+            if (command === ROOM_COMMANDS.CREATE_ROOM) {
+                res.type = ROOM_COMMANDS.UPDATE_ROOM;
+            }
+            if (res.type === ROOM_COMMANDS.UPDATE_ROOM && parsedData?.idGame) {
+                res.type = GAME_COMMANDS.CREATE_GAME;
+            }
+            if (command === ROOM_COMMANDS.ADD_TO_ROOM && parsedData?.idGame) {
+                res.type = GAME_COMMANDS.CREATE_GAME;
+            }
+
+            if (command === BASE_COMMANDS.ADD_SHIPS) {
+                ws.send(JSON.stringify(res));
+
+                if (command === BASE_COMMANDS.ADD_SHIPS && parsedData?.start === MAX_PLAYERS) {
+                    res.type = GAME_COMMANDS.START_GAME;
+                if (parsedData?.currentPlayerIndex) {
+                    turn = parsedData?.currentPlayerIndex;
+                }
+            }
+            }
+    
             if (res && !message) {
                 console.log(`On command: "${ command }" result was sended successfully.`);
                 ws.send(JSON.stringify(res));
@@ -99,18 +107,15 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
             console.log(res);
 
             wsServer.clients.forEach((wsClient) => {
-                if (playersForStart && playersForStart.find((playerId: string) => playerId === ws.socketId)) {
+                if (res.type === ROOM_COMMANDS.UPDATE_ROOM) {
                     wsClient.send(JSON.stringify(res));
                 }
-                if (command === ROOM_COMMANDS.UPDATE_ROOM) {
+                if (playersForStart && playersForStart.find((playerId: number) => playerId === ws.socketId)) {
                     wsClient.send(JSON.stringify(res));
                 }
-                if (command === GAME_COMMANDS.START_GAME) {
+                if (res.type === GAME_COMMANDS.START_GAME) {
                     wsClient.send(JSON.stringify(res));
-                    
-                    // 1) отправлять turn после каждого attack() и на start_game()
-                    // 2) вынести как-то отдельно формирование turn res (а не как щас - внутри wsServer.clients.forEach - тут должен быть уже сформированный выше res)
-                    // 3) реализовать attack()
+
                     if (turn) {
                         const turnData = {
                             currentPlayer: turn,
@@ -119,7 +124,7 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
                         const turnRes = {
                             type: "turn",
                             data: JSON.stringify(turnData),
-                            id: 0
+                            id: turn
                         };
 
                         wsClient.send(JSON.stringify(turnRes));

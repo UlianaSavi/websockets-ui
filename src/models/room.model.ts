@@ -5,5 +5,5 @@ export interface IRoom {
 
 export interface IRoomUser {
     name: string,
-    index: string
+    index: number
 }

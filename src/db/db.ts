@@ -1,6 +1,6 @@
 import { IRoom, IRoomUser } from "../models/room.model";
 import { IPlayer } from "../models/player.model";
-import { IGame } from "../models/game.model";
+import { IGame, IStartGame } from "../models/game.model";
 import { IShip, IShipPos } from "../models/ship.model";
 import { MAX_PLAYERS } from "../../constants";
 import { getShotRes } from "../utils/game/getShotRes";
@@ -36,10 +36,11 @@ class Database {
     };
 
     public addToRoom = (reqData: string) => {
-        const playerId: string = JSON.parse(reqData).socketId || '';
+        const playerId: number = JSON.parse(reqData).socketId || 0;
         const player = this.players.find((player) => player.socketId === playerId); // currrent player
-        const reqRoomIdx: number = JSON.parse(reqData).indexRoom || '';
+        const reqRoomIdx: number = JSON.parse(reqData).indexRoom || 0;
         const currRoomIdx: number = this.rooms.findIndex((room) => room.roomId === reqRoomIdx);
+        const secondPlayer = this.players.find((player) => player.socketId !== playerId);
 
         const check = player && this.rooms[currRoomIdx].roomUsers.find((roomUser) => roomUser.index === player.socketId);
 
@@ -49,7 +50,9 @@ class Database {
                 index: player.socketId
             });
             
-            return this.createGame(this.rooms[currRoomIdx].roomUsers, playerId);
+            return this.createGame(playerId, secondPlayer?.socketId || 0);
+        } else {
+            return null;
         }
 
         // if (this.roomToDelete) {
@@ -62,13 +65,13 @@ class Database {
     };
 
     public createRoom = (reqData: string) => {
-        const playerId: string = JSON.parse(reqData).socketId || '';
+        const playerId: number = JSON.parse(reqData).socketId || 0;
         const player = this.players.find((player) => player.socketId === playerId);
         const newRoom: IRoom = {
-            roomId: this.rooms.length + 1,
+            roomId: player?.socketId || 0,
             roomUsers: [{
                 name:  player?.name || '',
-                index: player?.socketId || '',
+                index: player?.socketId || 0,
             }],
         };
 
@@ -86,12 +89,11 @@ class Database {
         return this.rooms.filter((roomInArr) => roomInArr.roomId !== room.roomId);
     };
 
-    private createGame = (roomUsers: IRoomUser[], playerId: string) => {
-        const secondPlayer = roomUsers.find((user) => user.index !== playerId);
+    private createGame = (playerId: number, secondPlayerId: number) => {
         const data: IGame = {
-            idGame: this.games.length + 1,
+            idGame: playerId,
             idPlayer: playerId,
-            idSecondPlayer: secondPlayer?.index || ''
+            idSecondPlayer: secondPlayerId
         };
 
         this.roomToDelete = true;
@@ -101,28 +103,31 @@ class Database {
     public addShips = (reqData: string) => {
         const data: IShip = JSON.parse(reqData);
 
-        const ship: IShip = {
+        const ships: IShip = {
             gameId: data.gameId,
             ships: data.ships,
             indexPlayer: data.indexPlayer
         }
 
-        console.log('HERE this.shipsMap.push: ship --> ', ship);
-        
-        this.shipsMap.push(ship);
+        this.shipsMap.push(ships);
 
+        // TODO: 
+        //  должны отправиться вторые ships, а затем startGame() --> то есть в консоли в браузере:
+        //  у первого игрока: add_ships() --> start_game();
+        //  у второго игрока: add_ships() --> start_game();
+        // сейчас у тебя add_ships() два раза
         if (this.start.length < 2) {
             this.start.push(`ready: ${ data.indexPlayer }`);
             this.shipsMap.slice(0, 2);
 
-            return ship;
+            return ships;
         } else {
             return this.startGame(data.ships, data.indexPlayer);
         }
     };
 
-    private startGame = (ships: IShipPos[], indexPlayer: string) => {
-        const data = {
+    private startGame = (ships: IShipPos[], indexPlayer: number) => {
+        const data: IStartGame = {
             ships: ships,
             currentPlayerIndex: indexPlayer,
             start: MAX_PLAYERS
@@ -133,15 +138,14 @@ class Database {
 
     public attack = (reqData: string) => {
         const data = JSON.parse(reqData);
-        const currPlayerIdx = data.socketId || '';
+        const currPlayerIdx = data.socketId || 0;
 
         const protectorIdx = this.shipsMap.findIndex((ship: IShip) => ship.indexPlayer !== currPlayerIdx);
-        console.log('protectorIdx HERE', protectorIdx);
-        console.log('this.shipsMap HERE', this.shipsMap.length);
-        
         const protectorShips = this.shipsMap[protectorIdx]?.ships;
         
         const attackRes = getShotRes(data.x, data.y, protectorShips, currPlayerIdx);
+        // console.log('attackRes ---> ', attackRes);
+
         if (attackRes) {
             this.updateShipsMap(attackRes?.newShipPos, protectorShips, protectorIdx);
             return attackRes?.shipAfterShot;
@@ -150,9 +154,9 @@ class Database {
     }
 
     private updateShipsMap = (newShipPos: IShipPos, shipsFor: IShipPos[], protectorIdx: number) => {
-        const idx = shipsFor.findIndex((ship: IShipPos) => ship.position.x === newShipPos.position.x && ship.position.y === newShipPos.position.y);
-        this.shipsMap[protectorIdx].ships[idx].position.x = newShipPos.position.x; // new position for
-        this.shipsMap[protectorIdx].ships[idx].position.y = newShipPos.position.y; // new position for
+        const idx = shipsFor.findIndex((ship: IShipPos) => 123 /* get idx of shotted ship)  */);
+        this.shipsMap[protectorIdx].ships[idx].position.x = newShipPos.position.x; // new position for shotted ship on x
+        this.shipsMap[protectorIdx].ships[idx].position.y = newShipPos.position.y; // new position for shotted ship on y
     }
 };
 

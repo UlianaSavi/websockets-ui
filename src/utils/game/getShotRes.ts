@@ -1,10 +1,11 @@
 import { IAfterAttack, IShipAfterShot, IShipPos, shipsType } from "../../models/ship.model";
 
-export const getShotRes = (x: number, y: number, protectorShips: IShipPos[], playerId: string) => {
+export const getShotRes = (x: number, y: number, protectorShips: IShipPos[], playerId: number) => {
     let status = 'miss';
     let newShipPos: IShipPos | null  = null; // ship who get shot get new position of head for update ships map
     let shipAfterShot: IShipAfterShot | null  = null; // ship who get shot with old coordinates for front
 
+    // тут что-то не верно тк может прилететь y: -1 и тд :0
     protectorShips.forEach((ship) => {
         const shipSize = getShipSize(ship);
         if (ship.position.x === x && ship.position.y === y) { // if shot not miss

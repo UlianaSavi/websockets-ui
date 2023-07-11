@@ -38,7 +38,7 @@ export class Router {
             //     res = gameServise.randAttack();
             //     break;
             default:
-                console.log('unknown command! :(');
+                console.log('unknown command! :(', command);
                 break;
         }
 

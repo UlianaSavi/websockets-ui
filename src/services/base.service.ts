@@ -23,9 +23,4 @@ export class BaseService {
         this.res = data;
         return this.res;
     };
-
-    updateWins = () => {
-        console.log(this.command);
-        return this.res;
-    };
 }

@@ -18,8 +18,10 @@ export class RoomService {
     };
 
     addToRoom = () => {
-        const result = db.addToRoom(this.reqData) || null;
-        this.res = JSON.stringify(result); 
+        const result = db.addToRoom(this.reqData);
+        if (result) {
+            this.res = JSON.stringify(result); 
+        }
         return this.res;
     };
 }

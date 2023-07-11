@@ -11,19 +11,9 @@ export class GameService {
         this.reqData = reqData;
     }
 
-    finishGame = () => {
-        console.log(this.command);
-        return this.res;
-    };
-
     attack = () => {
         const data = JSON.stringify(db.attack(this.reqData));
         this.res = data;
-        return this.res;
-    };
-
-    randAttack = () => {
-        console.log(this.command);
         return this.res;
     };
 }
