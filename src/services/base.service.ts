@@ -13,14 +13,14 @@ export class BaseService {
     }
 
     registration = () => {
-        const data = db.registration(this.reqData) ? JSON.stringify(db.registration(this.reqData)) : null;
-        this.res = data;
+        const data = db.registration(this.reqData);
+        this.res = JSON.stringify(data);
         return this.res;
     };
 
     addShips = () => {
-        const data = db.addShips(this.reqData) ? JSON.stringify(db.addShips(this.reqData)) : null;
-        this.res = data;
+        const data = db.addShips(this.reqData);
+        this.res = JSON.stringify(data);
         return this.res;
     };
 }

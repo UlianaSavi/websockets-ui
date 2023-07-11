@@ -32,18 +32,19 @@ class Database {
         };
 
         this.players.push(newPlayer);
+        
         return newPlayer;
     };
 
     public addToRoom = (reqData: string) => {
         const playerId: number = JSON.parse(reqData)?.socketId;
         const player = this.players.find((player) => player?.socketId === playerId); // currrent player
+        
         const reqRoomIdx: number = JSON.parse(reqData)?.indexRoom;
         const currRoomIdx: number = this.rooms.findIndex((room) => room?.roomId === reqRoomIdx);
         const secondPlayer = this.players.find((player) => player?.socketId !== playerId);
 
         const check = player && this.rooms[currRoomIdx].roomUsers.find((roomUser) => roomUser.index === player.socketId);
-
         if (player && secondPlayer && !check) {
             return this.createGame(playerId, secondPlayer?.socketId);
             
@@ -98,7 +99,7 @@ class Database {
 
     public addShips = (reqData: string) => {
         const data: IShip = JSON.parse(reqData);
-
+        
         const ships: IShip = {
             gameId: data.gameId,
             ships: data.ships,
@@ -108,20 +109,21 @@ class Database {
 
         this.shipsMap.push(ships);
 
-        if (this.start.length < 2) {
+        console.log(this.start, this.start.length);
+        if (this.start.length < MAX_PLAYERS) {
             this.start.push(`ready: ${ data.socketId }`);
-
+            
             return ships;
         } else {
-            return this.startGame(ships, data.ships, data.socketId);
+            return this.startGame(ships, data.ships);
         }
     };
 
-    private startGame = (lastAddShips: IShip, shipPos: IShipPos[], socketId: number) => {
+    private startGame = (lastAddShips: IShip, shipPos: IShipPos[]) => {
         const data: IStartGame = {
             startGame: {
                 ships: shipPos,
-                currentPlayerIndex: socketId, // сетится не тот (только одного из кораблей)
+                currentPlayerIndex: lastAddShips?.socketId,
                 start: MAX_PLAYERS
             },
             lastAddShips: lastAddShips
@@ -131,13 +133,14 @@ class Database {
 
     public attack = (reqData: string) => {
         const data = JSON.parse(reqData);
-        const currPlayerIdx = data.socketId || 0;
+        const currPlayerIdx = data?.socketId || 0;
 
         const protectorIdx = this.shipsMap.findIndex((ship: IShip) => ship.indexPlayer !== currPlayerIdx);
         const protectorShips = this.shipsMap[protectorIdx]?.ships;
         
         const attackRes = getShotRes(data.x, data.y, protectorShips, currPlayerIdx);
 
+        // TODO: сейчас при выстреле возвращает null --> понять почему и поправить
         if (attackRes) {
             this.updateShipsMap(attackRes?.newShipPos, protectorShips, protectorIdx);
             return attackRes?.shipAfterShot;
