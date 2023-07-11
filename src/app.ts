@@ -65,7 +65,7 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
         
         const parsedData = data !== 'null' ? JSON.parse(data) : null;
         console.log(`On command: "${ command }" result was sended successfully.`);
-        console.log(`Result: "${ parsedData }"`);
+        console.log('Result: ----> \n', parsedData);
 
         if (!parsedData && command === ROOM_COMMANDS.ADD_TO_ROOM) {
             message = 'Player already in this room!';
