@@ -36,49 +36,46 @@ class Database {
     };
 
     public addToRoom = (reqData: string) => {
-        const playerId: number = JSON.parse(reqData).socketId || 0;
-        const player = this.players.find((player) => player.socketId === playerId); // currrent player
-        const reqRoomIdx: number = JSON.parse(reqData).indexRoom || 0;
-        const currRoomIdx: number = this.rooms.findIndex((room) => room.roomId === reqRoomIdx);
-        const secondPlayer = this.players.find((player) => player.socketId !== playerId);
+        const playerId: number = JSON.parse(reqData)?.socketId;
+        const player = this.players.find((player) => player?.socketId === playerId); // currrent player
+        const reqRoomIdx: number = JSON.parse(reqData)?.indexRoom;
+        const currRoomIdx: number = this.rooms.findIndex((room) => room?.roomId === reqRoomIdx);
+        const secondPlayer = this.players.find((player) => player?.socketId !== playerId);
 
         const check = player && this.rooms[currRoomIdx].roomUsers.find((roomUser) => roomUser.index === player.socketId);
 
-        if (player && !check) {
-            this.rooms[currRoomIdx].roomUsers.push({
-                name: player.name,
-                index: player.socketId
-            });
+        if (player && secondPlayer && !check) {
+            return this.createGame(playerId, secondPlayer?.socketId);
             
-            return this.createGame(playerId, secondPlayer?.socketId || 0);
-        } else {
-            return null;
         }
-
-        // if (this.roomToDelete) {
-        //     this.deleteFullRoom(this.rooms[currRoomIdx]);
-        // }
-
-        // if (fullRoom) {
-        //     this.deleteFullRoom(this.rooms[currRoomIdx]);
-        // }
+        if (player && !secondPlayer) {
+            this.rooms[currRoomIdx].roomUsers.push({
+                name: player && player.name,
+                index: player && player.socketId
+            });
+        }
+        return null;
     };
 
     public createRoom = (reqData: string) => {
-        const playerId: number = JSON.parse(reqData).socketId || 0;
-        const player = this.players.find((player) => player.socketId === playerId);
-        const newRoom: IRoom = {
-            roomId: player?.socketId || 0,
-            roomUsers: [{
-                name:  player?.name || '',
-                index: player?.socketId || 0,
-            }],
-        };
-
-        return this.updateRoom(newRoom);
+        const playerId: number = JSON.parse(reqData)?.socketId || 0;
+        const player = this.players.find((player) => player?.socketId === playerId);
+        if (player) {
+            const newRoom: IRoom = {
+                roomId: player?.socketId || 0,
+                roomUsers: [{
+                    name:  player?.name || '',
+                    index: player?.socketId || 0,
+                }],
+            };
+    
+            return this.updateRoom(newRoom);
+        }
+        return null;
+        
     };
 
-    private updateRoom = (room?: IRoom) => {
+    private updateRoom = (room: IRoom) => {
         if (room) {
             this.rooms.push(room);
         }
@@ -96,7 +93,6 @@ class Database {
             idSecondPlayer: secondPlayerId
         };
 
-        this.roomToDelete = true;
         return data;
     };
 
@@ -106,33 +102,30 @@ class Database {
         const ships: IShip = {
             gameId: data.gameId,
             ships: data.ships,
-            indexPlayer: data.indexPlayer
+            indexPlayer: data.socketId,
+            socketId: data.socketId
         }
 
         this.shipsMap.push(ships);
 
-        // TODO: 
-        //  должны отправиться вторые ships, а затем startGame() --> то есть в консоли в браузере:
-        //  у первого игрока: add_ships() --> start_game();
-        //  у второго игрока: add_ships() --> start_game();
-        // сейчас у тебя add_ships() два раза
         if (this.start.length < 2) {
-            this.start.push(`ready: ${ data.indexPlayer }`);
-            this.shipsMap.slice(0, 2);
+            this.start.push(`ready: ${ data.socketId }`);
 
             return ships;
         } else {
-            return this.startGame(data.ships, data.indexPlayer);
+            return this.startGame(ships, data.ships, data.socketId);
         }
     };
 
-    private startGame = (ships: IShipPos[], indexPlayer: number) => {
+    private startGame = (lastAddShips: IShip, shipPos: IShipPos[], socketId: number) => {
         const data: IStartGame = {
-            ships: ships,
-            currentPlayerIndex: indexPlayer,
-            start: MAX_PLAYERS
+            startGame: {
+                ships: shipPos,
+                currentPlayerIndex: socketId, // сетится не тот (только одного из кораблей)
+                start: MAX_PLAYERS
+            },
+            lastAddShips: lastAddShips
         };
-
         return data;
     }
 
@@ -144,7 +137,6 @@ class Database {
         const protectorShips = this.shipsMap[protectorIdx]?.ships;
         
         const attackRes = getShotRes(data.x, data.y, protectorShips, currPlayerIdx);
-        // console.log('attackRes ---> ', attackRes);
 
         if (attackRes) {
             this.updateShipsMap(attackRes?.newShipPos, protectorShips, protectorIdx);

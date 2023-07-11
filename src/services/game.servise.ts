@@ -12,8 +12,10 @@ export class GameService {
     }
 
     attack = () => {
-        const data = JSON.stringify(db.attack(this.reqData));
-        this.res = data;
+        const data = db.attack(this.reqData);
+        if (data) {
+            this.res = JSON.stringify(data);
+        }
         return this.res;
     };
 }

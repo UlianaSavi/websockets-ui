@@ -37,10 +37,9 @@ const wsServer = new WebSocketServer({
 });
 
 let num: number[] = [];
+
 wsServer.on('connection', function connection(ws: WebSocketClient) {
-    // const uuid = randomUUID();
-    // ws.socketId = +uuid.replaceAll(/[A-Za-z--]/g, ''); // delete characters and - from id (front need only nums)
-    ws.socketId = num.length
+    ws.socketId = num.length;
     num.push(ws.socketId);
 
     ws.on('error', (err) => {
@@ -54,6 +53,8 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
         let turn: string | null = null;
         let message: string | null = null;
         let reqData = command !== ROOM_COMMANDS.CREATE_ROOM ? JSON.parse(req.data || '') : {};
+
+        console.log(command);
 
         reqData.socketId = ws.socketId; // add socket id to request data for identify player
 
@@ -87,34 +88,70 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
                 res.type = GAME_COMMANDS.CREATE_GAME;
             }
 
-            if (command === BASE_COMMANDS.ADD_SHIPS) {
+            if (command === BASE_COMMANDS.ADD_SHIPS && !parsedData?.startGame?.start) {
                 ws.send(JSON.stringify(res));
+                console.log('here1');
+            }
+            if (command === GAME_COMMANDS.ATTACK) {
+                ws.send(JSON.stringify(res));
+            }
+            
+            if (command === BASE_COMMANDS.ADD_SHIPS && parsedData?.startGame?.start === MAX_PLAYERS) {
+                const dataArr = JSON.parse(res.data); // here got IStartGame interfaced data where .lastAddShips need to send before start game
+                const lastAddShips = {
+                    gameId: dataArr?.lastAddShips?.gameId,
+                    ships: dataArr?.lastAddShips?.ships,
+                    indexPlayer: dataArr?.lastAddShips?.socketId,
+                    socketId: dataArr?.lastAddShips?.socketId
+                };
 
-                if (command === BASE_COMMANDS.ADD_SHIPS && parsedData?.start === MAX_PLAYERS) {
-                    res.type = GAME_COMMANDS.START_GAME;
-                if (parsedData?.currentPlayerIndex) {
-                    turn = parsedData?.currentPlayerIndex;
+                const resArr = {
+                    type: res.type,
+                    data: JSON.stringify(lastAddShips),
+                    id: req.id
+                };
+
+                ws.send(JSON.stringify(resArr));
+                console.log('here2');
+
+                res.type = GAME_COMMANDS.START_GAME;
+
+                if (parsedData?.startGame?.currentPlayerIndex) {
+                    turn = parsedData?.startGame?.currentPlayerIndex;
                 }
             }
-            }
     
-            if (res && !message) {
+            if (res && !message && command !== GAME_COMMANDS.START_GAME && command !== ROOM_COMMANDS.UPDATE_ROOM && command !== BASE_COMMANDS.ADD_SHIPS) {
                 console.log(`On command: "${ command }" result was sended successfully.`);
                 ws.send(JSON.stringify(res));
+                console.log('here3');
             }
-
-            ws.send(JSON.stringify(res));
-            console.log(res);
 
             wsServer.clients.forEach((wsClient) => {
                 if (res.type === ROOM_COMMANDS.UPDATE_ROOM) {
                     wsClient.send(JSON.stringify(res));
+                    console.log('here4');
                 }
-                if (playersForStart && playersForStart.find((playerId: number) => playerId === ws.socketId)) {
+                if (playersForStart && playersForStart.find((playerId: number) => playerId === ws.socketId) 
+                    && res.type === GAME_COMMANDS.CREATE_GAME) { // create game for players that's ids in room
                     wsClient.send(JSON.stringify(res));
+                    console.log('here5');
                 }
-                if (res.type === GAME_COMMANDS.START_GAME) {
-                    wsClient.send(JSON.stringify(res));
+                if (res.type === GAME_COMMANDS.START_GAME) {  // start game for players that's ids in room
+                    const dataArr = JSON.parse(res.data);
+                    
+                    const dataRes = {
+                        ships: dataArr?.startGame?.ships,
+                        currentPlayerIndex: dataArr?.startGame?.currentPlayerIndex,
+                        start: MAX_PLAYERS
+                    };
+                    const resArr = {
+                        type: res.type,
+                        data: JSON.stringify(dataRes),
+                        id: req.id 
+                    }
+                    wsClient.send(JSON.stringify(resArr)); // here got IStartGame interfaced data where .startGame data for start
+                    console.log('here6');
 
                     if (turn) {
                         const turnData = {
@@ -127,7 +164,8 @@ wsServer.on('connection', function connection(ws: WebSocketClient) {
                             id: turn
                         };
 
-                        wsClient.send(JSON.stringify(turnRes));
+                        wsClient.send(JSON.stringify(turnRes));  // send turn for players that's ids in game
+                        console.log('here7');
                     }
                 }
             });

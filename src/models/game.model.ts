@@ -1,4 +1,4 @@
-import { IShipPos } from "./ship.model"
+import { IShip, IShipPos } from "./ship.model"
 
 export interface IGame {
     idGame: number,
@@ -7,7 +7,10 @@ export interface IGame {
 }
 
 export interface IStartGame {
-    ships: IShipPos[],
-    currentPlayerIndex: number,
-    start: number
+    startGame: {
+        ships: IShipPos[],
+        currentPlayerIndex: number,
+        start: number
+    },
+    lastAddShips: IShip
 }

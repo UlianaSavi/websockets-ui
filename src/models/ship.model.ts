@@ -1,7 +1,8 @@
 export interface IShip {
     gameId: number,
     ships: IShipPos[],
-    indexPlayer: number
+    indexPlayer: number,
+    socketId: number
 };
 
 export interface IShipPos {

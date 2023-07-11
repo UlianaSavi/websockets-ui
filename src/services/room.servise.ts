@@ -13,7 +13,9 @@ export class RoomService {
 
     createRoom = () => {
         const result = db.createRoom(this.reqData);
-        this.res = JSON.stringify(result);
+        if (result) {
+            this.res = JSON.stringify(result);
+        }
         return this.res;
     };
 
