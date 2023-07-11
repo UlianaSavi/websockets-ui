@@ -109,7 +109,6 @@ class Database {
 
         this.shipsMap.push(ships);
 
-        console.log(this.start, this.start.length);
         if (this.start.length < MAX_PLAYERS) {
             this.start.push(`ready: ${ data.socketId }`);
             

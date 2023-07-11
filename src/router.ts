@@ -26,7 +26,6 @@ export class Router {
                 break;
             case GAME_COMMANDS.ATTACK:
                 res = gameServise.attack();
-                console.log(res);
                 break;
             // case BASE_COMMANDS.UPDATE_WINS:
             //     res = baseServise.updateWins();
